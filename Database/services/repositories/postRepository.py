@@ -10,32 +10,46 @@ class PostRepository:
     def __init__(self, session: SessionDep):
         self.session = session
 
-    def Create(self, post: Post):
-        self.session.add(post)
-        self.session.commit()
+    def Create(self, post: Post) -> bool:
+        try:
+            self.session.add(post)
+            self.session.commit()
+            return True
+        except:
+            return False
 
-    def GetById(self, post_id: int):
+    def GetById(self, post_id: int) -> Post:
         return self.session.exec(select(Post).where(Post.id == post_id)).first()
 
-    def GetByAuthorId(self, author_id: int):
+    def GetByAuthorId(self, author_id: int) -> list[Post]:
         return self.session.exec(select(Post).where(Post.authorId == author_id)).all()
 
-    def GetAll(self, page=1, pageSize=100, filter=None):
+    def GetAll(self, page=1, pageSize=100, filter=None) -> list[Post]:
         return self.session.exec(
             select(Post).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()
 
-    def Update(self, post: Post):
-        self.session.merge(post)
-        self.session.commit()
+    def Update(self, post: Post) -> bool:
+        try:
+            self.session.merge(post)
+            self.session.commit()
+            return True
+        except:
+            return False
 
-    def Delete(self, post: Post):
-        self.session.delete(post)
-        self.session.commit()
+    def Delete(self, post: Post) -> bool:
+        try:
+            self.session.delete(post)
+            self.session.commit()
+            return True
+        except:
+            return False
     
-    def DeleteById(self, post_id: int):
+    def DeleteById(self, post_id: int) -> bool:
         post = self.GetById(post_id)
-        self.Delete(post)
+        if post:
+            return self.Delete(post)
+        return False
 
 
 PostRepositoryDep = Annotated[PostRepository, Depends(PostRepository)]

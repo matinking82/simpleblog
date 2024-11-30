@@ -10,34 +10,48 @@ class AdminRepository:
     def __init__(self, session: SessionDep):
         self.session = session
 
-    def Create(self, admin: Admin):
-        self.session.add(admin)
-        self.session.commit()
+    def Create(self, admin: Admin) -> bool:
+        try:
+            self.session.add(admin)
+            self.session.commit()
+            return True
+        except:
+            return False
 
-    def GetById(self, admin_id):
+    def GetById(self, admin_id) -> Admin:
         return self.session.exec(select(Admin).where(Admin.id == admin_id)).first()
 
-    def GetByUsername(self, username):
+    def GetByUsername(self, username) -> Admin:
         return self.session.exec(
             select(Admin).where(Admin.username == username)
         ).first()
 
-    def GetAll(self, page=1, pageSize=100, filter=None):
+    def GetAll(self, page=1, pageSize=100, filter=None) -> list[Admin]:
         return self.session.exec(
             select(Admin).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()
 
-    def Update(self, admin: Admin):
-        self.session.merge(admin)
-        self.session.commit()
+    def Update(self, admin: Admin) -> bool:
+        try:
+            self.session.merge(admin)
+            self.session.commit()
+            return True
+        except:
+            return False
 
-    def Delete(self, admin: Admin):
-        self.session.delete(admin)
-        self.session.commit()
+    def Delete(self, admin: Admin) -> bool:
+        try:
+            self.session.delete(admin)
+            self.session.commit()
+            return True
+        except:
+            return False
 
-    def DeleteById(self, admin_id: int):
+    def DeleteById(self, admin_id: int) -> bool:
         admin = self.GetById(admin_id)
-        self.Delete(admin)
+        if admin:
+            return self.Delete(admin)
+        return False
 
 
 AdminRepositoryDep = Annotated[AdminRepository, Depends(AdminRepository)]
