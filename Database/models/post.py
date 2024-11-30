@@ -4,11 +4,11 @@ from typing import List, Optional
 from sqlmodel import ForeignKey,Relationship
 
 
+from .comment import Comment
+from .tagPost import TagPost
 
-class Comment(SQLModel, table=True):
+class Post(SQLModel, table=True):
     id: int = Field(primary_key=True)
+    title: str
     content: str
-    
-    postId: int = Field(default=None, foreign_key="post.id")
-
-    readerId: int = Field(default=None, foreign_key="user.id")
+    authorId: int = Field(default=None, foreign_key="user.id")

@@ -3,11 +3,6 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 from typing import List, Optional
 from sqlmodel import ForeignKey,Relationship
 
-from .comment import Comment
-from .post import Post
-
-class User(SQLModel, table=True):
-    id: int = Field(primary_key=True)
-    username: str
-    passwordHash: str
-    isAuthor: bool
+class TagPost(SQLModel, table=True):
+    tagId: int = Field(primary_key=True, foreign_key="tag.id")
+    postId: int = Field(primary_key=True, foreign_key="post.id")

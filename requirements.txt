@@ -1,3 +1,7 @@
 fastapi
 uvicorn
 pydantic
+sqlmodel
+mysqlclient
+alembic
+python-dotenv
