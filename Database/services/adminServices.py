@@ -6,9 +6,9 @@ from fastapi import Depends
 
 
 
-class adminServices:
+class AdminServices:
     def __init__(self, adminRepository: AdminRepositoryDep):
         self.adminRepository = adminRepository
 
 
-AdminServiceDep = Annotated[adminServices, Depends(adminServices)]
+AdminServiceDep = Annotated[AdminServices, Depends(AdminServices)]

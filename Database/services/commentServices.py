@@ -5,9 +5,9 @@ from typing import Annotated
 from fastapi import Depends
 
 
-class commentServices:
+class CommentServices:
     def __init__(self, commentRepository: CommentRepositoryDep):
         self.adminRepository = commentRepository
 
 
-CommentServiceDep = Annotated[commentServices, Depends(commentServices)]
+CommentServiceDep = Annotated[CommentServices, Depends(CommentServices)]

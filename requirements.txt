@@ -2,6 +2,8 @@ fastapi
 uvicorn
 pydantic
 sqlmodel
+python-dotenv
+bcrypt
+python-jose
 mysqlclient
 alembic
-python-dotenv
