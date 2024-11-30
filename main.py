@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -5,4 +8,4 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to My Blog!"}
+    return {"message": "Hello World"}
