@@ -5,6 +5,11 @@ from sqlmodel import select
 from Database.context.context import SessionDep
 from Database.models.tag import Tag
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class TagRepository:
     def __init__(self, session: SessionDep):
@@ -15,16 +20,15 @@ class TagRepository:
             self.session.add(tag)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def GetById(self, tag_id) -> Tag:
         return self.session.exec(select(Tag).where(Tag.id == tag_id)).first()
 
     def GetByName(self, name) -> Tag:
-        return self.session.exec(
-            select(Tag).where(Tag.name == name)
-        ).first()
+        return self.session.exec(select(Tag).where(Tag.name == name)).first()
 
     def GetAll(self, page=1, pageSize=100, filter=None) -> list[Tag]:
         return self.session.exec(
@@ -36,7 +40,8 @@ class TagRepository:
             self.session.merge(tag)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def Delete(self, tag: Tag) -> bool:
@@ -44,7 +49,8 @@ class TagRepository:
             self.session.delete(tag)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def DeleteById(self, tag_id: int) -> bool:

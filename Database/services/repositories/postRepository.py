@@ -6,6 +6,12 @@ from Database.context.context import SessionDep
 from Database.models.post import Post
 
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 class PostRepository:
     def __init__(self, session: SessionDep):
         self.session = session
@@ -15,7 +21,8 @@ class PostRepository:
             self.session.add(post)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def GetById(self, post_id: int) -> Post:
@@ -34,7 +41,8 @@ class PostRepository:
             self.session.merge(post)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def Delete(self, post: Post) -> bool:
@@ -42,9 +50,10 @@ class PostRepository:
             self.session.delete(post)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
-    
+
     def DeleteById(self, post_id: int) -> bool:
         post = self.GetById(post_id)
         if post:

@@ -5,6 +5,11 @@ from sqlmodel import select
 from Database.context.context import SessionDep
 from Database.models.tagPost import TagPost
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class TagPostRepository:
     def __init__(self, session: SessionDep):
@@ -15,7 +20,8 @@ class TagPostRepository:
             self.session.add(tag_post)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def GetById(self, tag_post_id) -> TagPost:
@@ -39,7 +45,8 @@ class TagPostRepository:
             self.session.merge(tag_post)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def Delete(self, tag_post: TagPost) -> bool:
@@ -47,7 +54,8 @@ class TagPostRepository:
             self.session.delete(tag_post)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def DeleteById(self, tag_post_id: int) -> bool:

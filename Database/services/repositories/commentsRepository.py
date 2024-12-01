@@ -6,6 +6,12 @@ from Database.context.context import SessionDep
 from Database.models.comment import Comment
 
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 class CommentRepository:
     def __init__(self, session: SessionDep):
         self.session = session
@@ -15,7 +21,8 @@ class CommentRepository:
             self.session.add(comment)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def GetById(self, comment_id) -> Comment:
@@ -41,7 +48,8 @@ class CommentRepository:
             self.session.merge(comment)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def Delete(self, comment: Comment) -> bool:
@@ -49,7 +57,8 @@ class CommentRepository:
             self.session.delete(comment)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def DeleteById(self, comment_id: int) -> bool:

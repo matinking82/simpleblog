@@ -5,6 +5,9 @@ from sqlmodel import select
 from Database.context.context import SessionDep
 from Database.models.admin import Admin
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AdminRepository:
     def __init__(self, session: SessionDep):
@@ -15,7 +18,8 @@ class AdminRepository:
             self.session.add(admin)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def GetById(self, admin_id) -> Admin:
@@ -36,7 +40,8 @@ class AdminRepository:
             self.session.merge(admin)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def Delete(self, admin: Admin) -> bool:
@@ -44,7 +49,8 @@ class AdminRepository:
             self.session.delete(admin)
             self.session.commit()
             return True
-        except:
+        except Exception as e:
+            logger.error(e)
             return False
 
     def DeleteById(self, admin_id: int) -> bool:
