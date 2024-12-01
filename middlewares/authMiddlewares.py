@@ -39,21 +39,3 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "Role": payload.role,
         }
         return await call_next(req)
-
-
-def protectedRoute(role: UserRoles):
-    def decorator(func):
-        async def wrapper(req: Request, res: Response):
-            if not req.state.user["IsAuthenticated"]:
-                res.status_code = 401
-                return {
-                    "message": "You are not authenticated. Please login to access this resource"
-                }
-            if req.state.user["Role"] != role:
-                res.status_code = 403
-                return {"message": "You are not authorized to access this resource"}
-            return await func(req, res)
-
-        return wrapper
-
-    return decorator

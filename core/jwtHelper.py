@@ -1,10 +1,11 @@
 import os
-from jose import jwt, JWTError
 import datetime
 from enum import Enum
 from fastapi import Depends
 from typing import Annotated
 from pydantic import BaseModel
+import jwt
+from datetime import datetime, timedelta, timezone
 
 from core.enums import UserRoles
 
@@ -17,37 +18,29 @@ class JwtPayload:
         self.id = id
         self.role = role
 
+
 class JwtHelper:
     def __init__(self):
         self.SECRET_KEY = os.getenv("JWT_SECRET")
-        self.ALGORITHM = "HS256"
+        self.ALGORITHM = "HS512"
 
     def createJWT(self, payload: JwtPayload, expday=30):
-        payload.exp = datetime.datetime.utcnow() + datetime.timedelta(days=expday)
-        encoded_jwt = jwt.encode(
-            {
-                "id": payload.id,
-                "role": payload.role.value,
-            }, self.SECRET_KEY, algorithm=self.ALGORITHM
-        )
+        expire = datetime.now(timezone.utc) + timedelta(expday * 24 * 60)
+        to_encode = {
+            "id": payload.id,
+            "role": payload.role.value,
+        }
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, self.SECRET_KEY, algorithm=self.ALGORITHM)
         return encoded_jwt
 
     def verifyJwt(self, token: str):
         try:
             payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
-
-            result = JwtPayload()
-            result.id = payload["id"]
-            result.role = UserRoles(payload["role"])
-
-            if (
-                datetime.datetime.utcfromtimestamp(payload["exp"])
-                < datetime.datetime.utcnow()
-            ):
-                raise JWTError
-
-            return result
-        except JWTError:
+            return JwtPayload(id=payload["id"], role=UserRoles(payload["role"]))
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
             return None
 
 
