@@ -1,8 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Request, status
 
 from Database.services.userServices import UserServiceDep
 from core.enums import UserRoles
-from core.jwtHelper import JwtHelperDep, JwtPayload
 from viewmodels.requests.admin.registerUserRequest import RegisterUserRequest
 from viewmodels.requests.client.userLoginRequest import UserLoginRequest
 
@@ -10,28 +9,52 @@ router = APIRouter()
 
 
 @router.post("/register")
-async def register(user: RegisterUserRequest, userServices: UserServiceDep):
-    new_user = await userServices.RegisterUser(user)
+async def register(
+    request: Request, user: RegisterUserRequest, userServices: UserServiceDep
+):
+    if (
+        not request.state.user["IsAuthenticated"]
+        or request.state.user["Role"] != UserRoles.ADMIN
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
+        )
 
-    if not new_user:
-        return {"message": "User already exists", "success": False}
+    result = await userServices.RegisterUser(user)
 
-    return {"message": "User registered successfully", "success": True}
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
+
+    return result
 
 
 @router.post("/login")
-async def login(
-    user: UserLoginRequest, userServices: UserServiceDep, jwtHelper: JwtHelperDep
-):
-    loginuser = await userServices.loginUser(user)
+async def login(user: UserLoginRequest, userServices: UserServiceDep):
+    result = await userServices.loginUser(user)
 
-    if not loginuser:
-        return {"message": "Invalid credentials", "success": False}
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
 
-    id = loginuser.id
-    role = UserRoles.AUTHOR if loginuser.isAuthor else UserRoles.READER
-    payload = JwtPayload(id=id, role=role)
+    return result
 
-    token = jwtHelper.createJWT(payload)
 
-    return {"token": token, "success": True}
+@router.get("/validate")
+async def validate(request: Request, userServices: UserServiceDep):
+    if not request.state.user["IsAuthenticated"]:
+        return {
+            "message": "Token is invalid",
+            "success": False,
+        }
+    print(request.state.user)
+    result = await userServices.validateUser(request.state.user["Id"])
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
+        )
+
+    return result

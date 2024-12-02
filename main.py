@@ -15,9 +15,17 @@ from middlewares.authMiddlewares import AuthMiddleware
 from routers.client.userAuthRouter import router as userAuthRouter
 from routers.admin.adminAuthRouter import router as adminAuthRouter
 from fastapi import Request
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Define the OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

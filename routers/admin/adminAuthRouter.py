@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status, Request
 
 from Database.services.adminServices import AdminServiceDep
 from core.enums import UserRoles
@@ -11,30 +11,43 @@ router = APIRouter()
 
 @router.post("/register")
 async def register(admin: RegisterAdminRequest, adminServices: AdminServiceDep):
-    new_admin = adminServices.registerAdmin(admin)
+    result = adminServices.registerAdmin(admin)
 
-    if not new_admin:
-        return {
-            "message": "Something went wrong when trying to register",
-            "success": False,
-        }
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
 
-    return {"message": "Admin registered successfully", "success": True}
+    return result
 
 
 @router.post("/login")
-async def login(
-    admin: AdminLoginRequest, adminServices: AdminServiceDep, jwtHelper: JwtHelperDep
-):
-    loginAdmin = adminServices.loginAdmin(admin)
+async def login(admin: AdminLoginRequest, adminServices: AdminServiceDep):
+    result = adminServices.loginAdmin(admin)
 
-    if not loginAdmin:
-        return {"message": "Invalid credentials", "success": False}
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
 
-    id = loginAdmin.id
-    role = UserRoles.ADMIN
-    payload = JwtPayload(id=id, role=role)
+    return result
 
-    token = jwtHelper.createJWT(payload)
 
-    return {"token": token, "success": True}
+@router.get("/validate")
+async def validate(request: Request, adminServices: AdminServiceDep):
+    if (
+        not request.state.user["IsAuthenticated"]
+        or request.state.user["Role"] != UserRoles.ADMIN
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
+        )
+
+    result = await adminServices.validateAdmin(request.state.user["Id"])
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
+        )
+
+    return result

@@ -1,3 +1,5 @@
+from core.enums import UserRoles
+from core.jwtHelper import JwtHelperDep, JwtPayload
 from core.passwordHasher import PasswordHasherDep
 from viewmodels.requests.admin.registerUserRequest import RegisterUserRequest
 from Database.services.repositories.userRepository import UserRepositoryDep
@@ -9,14 +11,19 @@ from fastapi import Depends
 from datetime import datetime
 
 from viewmodels.requests.client.userLoginRequest import UserLoginRequest
+from viewmodels.responses.client.UserViewModel import UserViewModel
 
 
 class UserServices:
     def __init__(
-        self, userRepository: UserRepositoryDep, passwordHasher: PasswordHasherDep
+        self,
+        userRepository: UserRepositoryDep,
+        passwordHasher: PasswordHasherDep,
+        jwtHelper: JwtHelperDep,
     ):
         self.adminRepository = userRepository
         self.passwordHasher = passwordHasher
+        self.jwtHelper = jwtHelper
 
     async def RegisterUser(self, request: RegisterUserRequest):
         # Hash the password
@@ -32,22 +39,68 @@ class UserServices:
         success = self.adminRepository.Create(new_user)
 
         if success:
-            return new_user
+            return {
+                "message": "User registered successfully",
+                "success": True,
+                "user": UserViewModel(
+                    id=new_user.id,
+                    username=new_user.username,
+                    isAuthor=new_user.isAuthor,
+                    created_at=new_user.created_at,
+                ),
+            }
 
-        return None
+        return {
+            "message": "User already exists",
+            "success": False,
+        }
 
     async def loginUser(self, request: UserLoginRequest):
         user = self.adminRepository.GetByUsername(request.username)
         if not user:
-            return None
+            raise {
+                "message": "User not found",
+                "success": False,
+            }
 
         if self.passwordHasher.VerifyPassword(request.password, user.passwordHash):
-            return user
+            token = self.jwtHelper.createJWT(
+                JwtPayload(
+                    id=user.id,
+                    role=UserRoles.AUTHOR if user.isAuthor else UserRoles.READER,
+                )
+            )
+            return {
+                "success": True,
+                "message": "User logged in successfully",
+                "token": token,
+                "token_type": "bearer",
+            }
 
-        return None
+        return {
+            "message": "Invalid credentials",
+            "success": False,
+        }
 
     async def validateUser(self, id: int):
-        return self.adminRepository.GetById(id)
+        user = self.adminRepository.GetById(id)
+
+        if not user:
+            return {
+                "message": "User not found",
+                "success": False,
+            }
+
+        return {
+            "message": "User found",
+            "success": True,
+            "user": UserViewModel(
+                id=user.id,
+                username=user.username,
+                isAuthor=user.isAuthor,
+                created_at=user.created_at,
+            ),
+        }
 
 
 UserServiceDep = Annotated[UserServices, Depends(UserServices)]
