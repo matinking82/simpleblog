@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 
+from middlewares.authMiddlewares import protected_route
+
 load_dotenv()
 
 from fastapi.security import OAuth2PasswordBearer
@@ -11,7 +13,6 @@ from core.jwtHelper import JwtHelper, JwtHelperDep
 
 from fastapi import FastAPI
 
-from middlewares.authMiddlewares import AuthMiddleware
 from routers.client.userAuthRouter import router as userAuthRouter
 from routers.client.postRouter import router as postRouter
 from routers.admin.adminAuthRouter import router as adminAuthRouter
@@ -58,9 +59,6 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-app.add_middleware(AuthMiddleware, jwtHelper=JwtHelper())
-
-
 app.include_router(userAuthRouter, prefix="/auth", tags=["User Authentication"])
 app.include_router(postRouter, prefix="/post", tags=["Posts"])
 
@@ -68,5 +66,5 @@ app.include_router(adminAuthRouter, prefix="/admin/auth", tags=["Admin Authentic
 
 
 @app.get("/")
-async def root(request: Request):
-    return {"message": "Hello World", "user": request.state}
+async def root(authUser: dict = protected_route()):
+    return {"message": "Hello World", "user": authUser}

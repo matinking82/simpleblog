@@ -1,59 +1,62 @@
 from typing import Callable
-from fastapi import FastAPI, HTTPException, Request, Response, Depends, status
+from fastapi import HTTPException, Request, Depends, status
+from Database.services.userServices import UserServiceDep
 from core.enums import UserRoles
-from core.jwtHelper import JwtHelper
-from starlette.middleware.base import BaseHTTPMiddleware
-
-from routers import admin
+from core.jwtHelper import JwtHelperDep
 
 
-class AuthMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: FastAPI, jwtHelper: JwtHelper):
-        super().__init__(app)
-        self.jwtHelper = jwtHelper
-
-    async def dispatch(self, req: Request, call_next: Callable):
-        bearerToken = req.headers.get("Authorization")
+def protected_route(
+    roles: list[UserRoles] = [UserRoles.ADMIN, UserRoles.READER, UserRoles.AUTHOR],
+):
+    async def protect(
+        request: Request,
+        jwtHelper: JwtHelperDep,
+        userServices: UserServiceDep,
+    ):
+        bearerToken = request.headers.get("Authorization")
         if not bearerToken:
-            req.state.user = {"IsAuthenticated": False}
-            return await call_next(req)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+            )
 
         parts = bearerToken.split(" ")
         if len(parts) != 2:
-            req.state.user = {"IsAuthenticated": False}
-            return await call_next(req)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+            )
 
         token = parts[1]
 
         if not token:
-            req.state.user = {"IsAuthenticated": False}
-            return await call_next(req)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+            )
 
-        payload = self.jwtHelper.verifyJwt(token)
+        payload = jwtHelper.verifyJwt(token)
 
         if not payload:
-            req.state.user = {"IsAuthenticated": False}
-            return await call_next(req)
-
-        req.state.user = {
-            "IsAuthenticated": True,
-            "Id": payload.id,
-            "Role": payload.role,
-        }
-        return await call_next(req)
-
-
-def protected_route(
-    roles: list[UserRoles] = [UserRoles.ADMIN, UserRoles.READER, UserRoles.AUTHOR]
-):
-    def protect(request: Request):
-        if (
-            not request.state.user["IsAuthenticated"]
-            or request.state.user["Role"] not in roles
-        ):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
             )
-        return request.state.user
+
+        role = payload.role
+
+        if role != UserRoles.ADMIN:
+            result = await userServices.validateUser(id=payload.id)
+            if not result["success"]:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized"
+                )
+            role = UserRoles.AUTHOR if result["user"].isAuthor else UserRoles.READER
+
+        if role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden"
+            )
+
+        return {
+            "Id": payload.id,
+            "Role": role,
+        }
 
     return Depends(protect)
