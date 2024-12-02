@@ -56,4 +56,4 @@ def protected_route(
             )
         return request.state.user
 
-    return protect
+    return Depends(protect)

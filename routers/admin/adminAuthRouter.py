@@ -14,7 +14,7 @@ router = APIRouter()
 async def register(
     admin: RegisterAdminRequest,
     adminServices: AdminServiceDep,
-    authUser: dict = Depends(protected_route([UserRoles.ADMIN])),
+    authUser: dict = protected_route([UserRoles.ADMIN]),
 ):
     result = adminServices.registerAdmin(admin)
 
@@ -41,7 +41,7 @@ async def login(admin: AdminLoginRequest, adminServices: AdminServiceDep):
 @router.get("/validate")
 async def validate(
     adminServices: AdminServiceDep,
-    authUser: dict = Depends(protected_route([UserRoles.ADMIN])),
+    authUser: dict = protected_route([UserRoles.ADMIN]),
 ):
     result = await adminServices.validateAdmin(authUser["Id"])
 
