@@ -9,6 +9,7 @@ from datetime import datetime
 
 from Database.services.repositories.userRepository import UserRepositoryDep
 from viewmodels.requests.client.CreatePostRequest import CreatePostRequest
+from viewmodels.requests.client.UpdatePostRequest import UpdaetPostRequest
 from viewmodels.responses.client.PostViewModel import PostViewModel
 
 
@@ -80,6 +81,45 @@ class PostServices:
                 content=post.content,
                 authorId=None,
                 author=None,
+                created_at=post.created_at,
+                updated_at=post.updated_at,
+            ),
+        }
+
+    async def updatePost(
+        self, id: int, request: UpdaetPostRequest, authorId: int | None = None
+    ):
+        post = self.postRepository.GetById(id)
+
+        if not post:
+            return {"success": False, "message": "post not found"}
+
+        if authorId and post.authorId != authorId:
+            return {"success": False, "message": "unauthorized"}
+
+        post.title = request.title if request.title else post.title
+        post.content = request.content if request.content else post.content
+
+        post.updated_at = datetime.now()
+
+        success = self.postRepository.Update(post)
+
+        if not success:
+            return {"success": False, "message": "failed to update post"}
+
+        return {
+            "success": True,
+            "message": "post updated",
+            "post": PostViewModel(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                authorId=post.authorId,
+                author=(
+                    None
+                    if not post.authorId
+                    else self.userRepository.GetById(post.authorId).username
+                ),
                 created_at=post.created_at,
                 updated_at=post.updated_at,
             ),

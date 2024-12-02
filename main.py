@@ -1,9 +1,9 @@
 from dotenv import load_dotenv
-
-from middlewares.authMiddlewares import protected_route
-
 load_dotenv()
 
+
+
+from middlewares.authMiddlewares import protected_route
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.openapi.utils import get_openapi
 
