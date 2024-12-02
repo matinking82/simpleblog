@@ -13,6 +13,7 @@ from fastapi import FastAPI
 
 from middlewares.authMiddlewares import AuthMiddleware
 from routers.client.userAuthRouter import router as userAuthRouter
+from routers.client.postRouter import router as postRouter
 from routers.admin.adminAuthRouter import router as adminAuthRouter
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,6 +62,8 @@ app.add_middleware(AuthMiddleware, jwtHelper=JwtHelper())
 
 
 app.include_router(userAuthRouter, prefix="/auth", tags=["User Authentication"])
+app.include_router(postRouter, prefix="/post", tags=["Posts"])
+
 app.include_router(adminAuthRouter, prefix="/admin/auth", tags=["Admin Authentication"])
 
 

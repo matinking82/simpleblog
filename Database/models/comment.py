@@ -9,5 +9,5 @@ class Comment(SQLModel, table=True):
     id: int = Field(primary_key=True)
     content: str
     created_at: date
-    postId: int = Field(default=None, foreign_key="post.id")
-    readerId: int = Field(default=None, foreign_key="user.id")
+    postId: int = Field(foreign_key="post.id")
+    readerId: int = Field(foreign_key="user.id")

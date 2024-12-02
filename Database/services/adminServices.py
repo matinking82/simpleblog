@@ -50,7 +50,10 @@ class AdminServices:
     def loginAdmin(self, request: AdminLoginRequest):
         admin = self.adminRepository.GetByUsername(request.username)
         if not admin:
-            return None
+            return {
+                "message": "Admin not found",
+                "success": False,
+            }
 
         if self.passwordHasher.VerifyPassword(request.password, admin.password):
             token = self.jwtHelper.createJWT(

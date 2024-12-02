@@ -9,6 +9,6 @@ class Post(SQLModel, table=True):
     id: int = Field(primary_key=True)
     title: str
     content: str
-    authorId: int = Field(default=None, foreign_key="user.id")
+    authorId: int | None = Field(default=None, foreign_key="user.id")
     created_at: date
     updated_at: date

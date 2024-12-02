@@ -1,6 +1,7 @@
 from core.enums import UserRoles
 from core.jwtHelper import JwtHelperDep, JwtPayload
 from core.passwordHasher import PasswordHasherDep
+from viewmodels.requests.admin.changeUserRoleRequest import ChangeUserRoleRequest
 from viewmodels.requests.admin.registerUserRequest import RegisterUserRequest
 from Database.services.repositories.userRepository import UserRepositoryDep
 from Database.models.user import User
@@ -21,7 +22,7 @@ class UserServices:
         passwordHasher: PasswordHasherDep,
         jwtHelper: JwtHelperDep,
     ):
-        self.adminRepository = userRepository
+        self.userRepository = userRepository
         self.passwordHasher = passwordHasher
         self.jwtHelper = jwtHelper
 
@@ -36,7 +37,7 @@ class UserServices:
             isAuthor=request.isAuthor,
         )
         # Add the user to the database
-        success = self.adminRepository.Create(new_user)
+        success = self.userRepository.Create(new_user)
 
         if success:
             return {
@@ -56,7 +57,7 @@ class UserServices:
         }
 
     async def loginUser(self, request: UserLoginRequest):
-        user = self.adminRepository.GetByUsername(request.username)
+        user = self.userRepository.GetByUsername(request.username)
         if not user:
             raise {
                 "message": "User not found",
@@ -83,7 +84,7 @@ class UserServices:
         }
 
     async def validateUser(self, id: int):
-        user = self.adminRepository.GetById(id)
+        user = self.userRepository.GetById(id)
 
         if not user:
             return {
@@ -100,6 +101,30 @@ class UserServices:
                 isAuthor=user.isAuthor,
                 created_at=user.created_at,
             ),
+        }
+
+    async def setRole(self, request: ChangeUserRoleRequest):
+        user = self.userRepository.GetByUsername(request.username)
+
+        if not user:
+            return {
+                "message": "User not found",
+                "success": False,
+            }
+
+        user.isAuthor = request.isAuthor
+
+        success = self.userRepository.Update(user)
+
+        if success:
+            return {
+                "message": "Role updated successfully",
+                "success": True,
+            }
+
+        return {
+            "message": "Failed to update role",
+            "success": False,
         }
 
 
