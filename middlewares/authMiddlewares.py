@@ -1,8 +1,10 @@
 from typing import Callable
-from fastapi import FastAPI, Request, Response, Depends
+from fastapi import FastAPI, HTTPException, Request, Response, Depends, status
 from core.enums import UserRoles
 from core.jwtHelper import JwtHelper
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from routers import admin
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -39,3 +41,19 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "Role": payload.role,
         }
         return await call_next(req)
+
+
+def protected_route(
+    roles: list[UserRoles] = [UserRoles.ADMIN, UserRoles.READER, UserRoles.AUTHOR]
+):
+    def protect(request: Request):
+        if (
+            not request.state.user["IsAuthenticated"]
+            or request.state.user["Role"] not in roles
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
+            )
+        return request.state.user
+
+    return protect

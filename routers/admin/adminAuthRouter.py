@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status, Request, Depends
 
 from Database.services.adminServices import AdminServiceDep
 from core.enums import UserRoles
 from core.jwtHelper import JwtHelperDep, JwtPayload
+from middlewares.authMiddlewares import protected_route
 from viewmodels.requests.admin.adminLoginRequest import AdminLoginRequest
 from viewmodels.requests.admin.registerAdminRequest import RegisterAdminRequest
 
@@ -10,7 +11,11 @@ router = APIRouter()
 
 
 @router.post("/register")
-async def register(admin: RegisterAdminRequest, adminServices: AdminServiceDep):
+async def register(
+    admin: RegisterAdminRequest,
+    adminServices: AdminServiceDep,
+    authUser: dict = Depends(protected_route([UserRoles.ADMIN])),
+):
     result = adminServices.registerAdmin(admin)
 
     if not result["success"]:
@@ -34,16 +39,11 @@ async def login(admin: AdminLoginRequest, adminServices: AdminServiceDep):
 
 
 @router.get("/validate")
-async def validate(request: Request, adminServices: AdminServiceDep):
-    if (
-        not request.state.user["IsAuthenticated"]
-        or request.state.user["Role"] != UserRoles.ADMIN
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
-        )
-
-    result = await adminServices.validateAdmin(request.state.user["Id"])
+async def validate(
+    adminServices: AdminServiceDep,
+    authUser: dict = Depends(protected_route([UserRoles.ADMIN])),
+):
+    result = await adminServices.validateAdmin(authUser["Id"])
 
     if not result["success"]:
         raise HTTPException(

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, status, Depends
 
 from Database.services.userServices import UserServiceDep
 from core.enums import UserRoles
+from middlewares.authMiddlewares import protected_route
 from viewmodels.requests.admin.registerUserRequest import RegisterUserRequest
 from viewmodels.requests.client.userLoginRequest import UserLoginRequest
 
@@ -10,17 +11,12 @@ router = APIRouter()
 
 @router.post("/register")
 async def register(
-    request: Request, user: RegisterUserRequest, userServices: UserServiceDep
+    userRequest: RegisterUserRequest,
+    userServices: UserServiceDep,
+    authUser: dict = Depends(protected_route([UserRoles.ADMIN])),
 ):
-    if (
-        not request.state.user["IsAuthenticated"]
-        or request.state.user["Role"] != UserRoles.ADMIN
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="not authorized"
-        )
-
-    result = await userServices.RegisterUser(user)
+    print(authUser)
+    result = await userServices.RegisterUser(userRequest)
 
     if not result["success"]:
         raise HTTPException(
@@ -43,14 +39,11 @@ async def login(user: UserLoginRequest, userServices: UserServiceDep):
 
 
 @router.get("/validate")
-async def validate(request: Request, userServices: UserServiceDep):
-    if not request.state.user["IsAuthenticated"]:
-        return {
-            "message": "Token is invalid",
-            "success": False,
-        }
-    print(request.state.user)
-    result = await userServices.validateUser(request.state.user["Id"])
+async def validate(
+    userServices: UserServiceDep,
+    authUser: dict = Depends(protected_route([UserRoles.READER, UserRoles.AUTHOR])),
+):
+    result = await userServices.validateUser(authUser["Id"])
 
     if not result:
         raise HTTPException(
