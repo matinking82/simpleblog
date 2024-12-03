@@ -8,5 +8,6 @@ class PostViewModel(BaseModel):
     content: str
     authorId: int | None
     author: str | None
+    tags: list[str]
     created_at: date
     updated_at: date

@@ -1,3 +1,5 @@
+from Database.models.tag import Tag
+from Database.models.tagPost import TagPost
 from Database.services.repositories.postRepository import PostRepositoryDep
 from Database.services.repositories.tagRepository import TagRepositoryDep
 from Database.services.repositories.tagPostRepository import TagPostRepositoryDep
@@ -21,7 +23,6 @@ class PostServices:
         tagPostRepository: TagPostRepositoryDep,
         userRepository: UserRepositoryDep,
     ):
-        self.adminRepository = postRepository
         self.tagRepository = tagRepository
         self.tagPostRepository = tagPostRepository
         self.postRepository = postRepository
@@ -41,9 +42,25 @@ class PostServices:
             updated_at=now,
         )
         success = self.postRepository.Create(post)
-
         if not success:
             return {"success": False, "message": "failed to create post"}
+
+        for tag in request.tags:
+            tagmodel = self.tagRepository.GetByName(tag)
+
+            if not tagmodel:
+                tagmodel = Tag(name=tag)
+                success = self.tagRepository.Create(tagmodel)
+
+                if not success:
+                    return {"success": False, "message": "failed to create tag"}
+
+            success = self.tagPostRepository.Create(
+                TagPost(tagId=tagmodel.id, postId=post.id)
+            )
+
+            if not success:
+                return {"success": False, "message": "failed to create tagpost"}
 
         return {
             "success": True,
@@ -56,6 +73,7 @@ class PostServices:
                 author=None if not author else author.username,
                 created_at=post.created_at,
                 updated_at=post.updated_at,
+                tags=request.tags,
             ),
         }
 
@@ -72,6 +90,23 @@ class PostServices:
         if not success:
             return {"success": False, "message": "failed to create post"}
 
+        for tag in request.tags:
+            tagmodel = self.tagRepository.GetByName(tag)
+
+            if not tagmodel:
+                tagmodel = Tag(name=tag)
+                success = self.tagRepository.Create(tagmodel)
+
+                if not success:
+                    return {"success": False, "message": "failed to create tag"}
+
+            success = self.tagPostRepository.Create(
+                TagPost(tagId=tagmodel.id, postId=post.id)
+            )
+
+            if not success:
+                return {"success": False, "message": "failed to create tagpost"}
+
         return {
             "success": True,
             "message": "post created",
@@ -83,6 +118,7 @@ class PostServices:
                 author=None,
                 created_at=post.created_at,
                 updated_at=post.updated_at,
+                tags=request.tags,
             ),
         }
 
@@ -106,6 +142,30 @@ class PostServices:
 
         if not success:
             return {"success": False, "message": "failed to update post"}
+        tags: list[str] = []
+        if request.tags:
+            success = self.tagPostRepository.DeleteByPostId(post.id)
+            if not success:
+                return {"success": False, "message": "failed to delete tags"}
+            tags = request.tags
+            for tag in request.tags:
+                tagmodel = self.tagRepository.GetByName(tag)
+
+                if not tagmodel:
+                    tagmodel = Tag(name=tag)
+                    success = self.tagRepository.Create(tagmodel)
+
+                    if not success:
+                        return {"success": False, "message": "failed to create tag"}
+
+                success = self.tagPostRepository.Create(
+                    TagPost(tagId=tagmodel.id, postId=post.id)
+                )
+
+                if not success:
+                    return {"success": False, "message": "failed to create tagpost"}
+        else:
+            tags = self.tagPostRepository.GetTagNamesByPostId(post.id)
 
         return {
             "success": True,
@@ -122,6 +182,7 @@ class PostServices:
                 ),
                 created_at=post.created_at,
                 updated_at=post.updated_at,
+                tags=tags,
             ),
         }
 

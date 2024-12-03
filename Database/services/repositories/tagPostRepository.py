@@ -3,6 +3,7 @@ from typing import Annotated
 from sqlmodel import select
 
 from Database.context.context import SessionDep
+from Database.models.tag import Tag
 from Database.models.tagPost import TagPost
 
 import logging
@@ -34,6 +35,24 @@ class TagPostRepository:
 
     def GetByTagId(self, tag_id) -> list[TagPost]:
         return self.session.exec(select(TagPost).where(TagPost.tagId == tag_id)).all()
+
+    def GetTagNamesByPostId(self, post_id) -> list[str]:
+        join = self.session.exec(
+            select(TagPost, Tag).where(TagPost.postId == post_id)
+        ).all()
+
+        return [j[1].name for j in join]
+
+    def DeleteByPostId(self, post_id) -> bool:
+        try:
+            tagposts = self.GetByPostId(post_id)
+            for tagpost in tagposts:
+                self.session.delete(tagpost)
+            self.session.commit()
+            return True
+        except Exception as e:
+            logger.error(e)
+            return False
 
     def GetAll(self, page=1, pageSize=100, filter=None) -> list[TagPost]:
         return self.session.exec(
