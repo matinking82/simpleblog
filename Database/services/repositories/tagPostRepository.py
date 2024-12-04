@@ -38,7 +38,9 @@ class TagPostRepository:
 
     def GetTagNamesByPostId(self, post_id) -> list[str]:
         join = self.session.exec(
-            select(TagPost, Tag).where(TagPost.postId == post_id)
+            select(TagPost, Tag)
+            .where(TagPost.tagId == Tag.id)
+            .where(TagPost.postId == post_id)
         ).all()
 
         return [j[1].name for j in join]

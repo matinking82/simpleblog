@@ -11,6 +11,7 @@ from datetime import datetime
 
 from Database.services.repositories.userRepository import UserRepositoryDep
 from viewmodels.requests.client.CreatePostRequest import CreatePostRequest
+from viewmodels.requests.client.PostsFilter import PostsFilter
 from viewmodels.requests.client.UpdatePostRequest import UpdaetPostRequest
 from viewmodels.responses.client.PostViewModel import PostViewModel
 
@@ -184,6 +185,41 @@ class PostServices:
                 updated_at=post.updated_at,
                 tags=tags,
             ),
+        }
+
+    async def GetPosts(
+        self, postsFilter: PostsFilter, page: int = 1, pageSize: int = 100
+    ):
+        filter = True
+        
+        #TODO:filter
+        
+        posts = self.postRepository.GetAll(page, pageSize, filter)
+        postViewModels: list[PostViewModel] = []
+        for post in posts:
+            tags = self.tagPostRepository.GetTagNamesByPostId(post.id)
+
+            postViewModels.append(
+                PostViewModel(
+                    id=post.id,
+                    title=post.title,
+                    content=post.content,
+                    authorId=post.authorId,
+                    author=(
+                        None
+                        if not post.authorId
+                        else self.userRepository.GetById(post.authorId).username
+                    ),
+                    created_at=post.created_at,
+                    updated_at=post.updated_at,
+                    tags=tags,
+                )
+            )
+
+        return {
+            "success": True,
+            "message": "posts found",
+            "posts": postViewModels,
         }
 
 

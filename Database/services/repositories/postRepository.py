@@ -8,6 +8,10 @@ from Database.models.post import Post
 
 import logging
 
+from Database.models.tag import Tag
+from Database.models.tagPost import TagPost
+from Database.models.user import User
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -31,7 +35,7 @@ class PostRepository:
     def GetByAuthorId(self, author_id: int) -> list[Post]:
         return self.session.exec(select(Post).where(Post.authorId == author_id)).all()
 
-    def GetAll(self, page=1, pageSize=100, filter=None) -> list[Post]:
+    def GetAll(self, page=1, pageSize=100, filter=True) -> list[Post]:
         return self.session.exec(
             select(Post).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()

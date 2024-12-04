@@ -1,12 +1,30 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from Database.services.postServices import PostServiceDep
 from core.enums import UserRoles
 from middlewares.authMiddlewares import protected_route
+from viewmodels.requests.client.PostsFilter import PostsFilter
 from viewmodels.requests.client.UpdatePostRequest import UpdaetPostRequest
 from viewmodels.requests.client.CreatePostRequest import CreatePostRequest
 
 router = APIRouter()
+
+
+@router.get("/")
+async def getPosts(
+    postServices: PostServiceDep,
+    filter: PostsFilter = Query(None),
+    page: int = 1,
+    pageSize: int = 10,
+):
+    result = await postServices.GetPosts(filter, page, pageSize)
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
+
+    return result
 
 
 @router.post("/")
