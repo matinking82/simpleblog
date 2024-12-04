@@ -15,6 +15,7 @@ from fastapi import FastAPI
 
 from routers.client.userAuthRouter import router as userAuthRouter
 from routers.client.postRouter import router as postRouter
+from routers.client.commentRouter import router as commentRouter
 from routers.admin.adminAuthRouter import router as adminAuthRouter
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,10 +62,11 @@ app.openapi = custom_openapi
 
 app.include_router(userAuthRouter, prefix="/auth", tags=["User Authentication"])
 app.include_router(postRouter, prefix="/post", tags=["Posts"])
+app.include_router(commentRouter, prefix="/comment", tags=["Comments"])
 
 app.include_router(adminAuthRouter, prefix="/admin/auth", tags=["Admin Authentication"])
 
 
 @app.get("/")
-async def root(authUser: dict = protected_route()):
-    return {"message": "Hello World", "user": authUser}
+async def root():
+    return {"message": "Welcome to My Simple Blog API"}

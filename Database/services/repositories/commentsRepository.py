@@ -36,7 +36,13 @@ class CommentRepository:
         ).all()
 
     def GetByPostId(self, post_id) -> list[Comment]:
-        return self.session.exec(select(Comment).where(Comment.postId == post_id)).all()
+        try:
+            return self.session.exec(
+                select(Comment).where(Comment.postId == post_id)
+            ).all()
+        except Exception as e:
+            logger.error(e)
+            return None
 
     def GetByAuthorId(self, author_id) -> list[Comment]:
         return self.session.exec(
