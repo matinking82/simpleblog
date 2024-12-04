@@ -187,13 +187,32 @@ class PostServices:
             ),
         }
 
+    async def deletePost(self, id: int, authorId: int | None = None):
+        post = self.postRepository.GetById(id)
+
+        if not post:
+            return {"success": False, "message": "post not found"}
+
+        if authorId and post.authorId != authorId:
+            return {"success": False, "message": "unauthorized"}
+
+        success = self.tagPostRepository.DeleteByPostId(post.id)
+        if not success:
+            return {"success": False, "message": "failed to delete tags"}
+
+        success = self.postRepository.Delete(post)
+        if not success:
+            return {"success": False, "message": "failed to delete post"}
+
+        return {"success": True, "message": "post deleted"}
+
     async def GetPosts(
         self, postsFilter: PostsFilter, page: int = 1, pageSize: int = 100
     ):
         filter = True
-        
-        #TODO:filter
-        
+
+        # TODO:filter
+
         posts = self.postRepository.GetAll(page, pageSize, filter)
         postViewModels: list[PostViewModel] = []
         for post in posts:

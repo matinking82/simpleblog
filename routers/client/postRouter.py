@@ -63,3 +63,21 @@ async def updatePost(
         )
 
     return result
+
+
+@router.delete("/{id}")
+async def deletePost(
+    id: int,
+    postServices: PostServiceDep,
+    authUser: dict = protected_route([UserRoles.AUTHOR, UserRoles.ADMIN]),
+):
+    result = await postServices.deletePost(
+        id, authUser["Id"] if authUser["Role"] == UserRoles.AUTHOR else None
+    )
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
+
+    return result
