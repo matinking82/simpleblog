@@ -209,11 +209,7 @@ class PostServices:
     async def GetPosts(
         self, postsFilter: PostsFilter, page: int = 1, pageSize: int = 100
     ):
-        filter = True
-
-        # TODO:filter
-
-        posts = self.postRepository.GetAll(page, pageSize, filter)
+        posts = self.postRepository.GetAll(page, pageSize, postsFilter)
         postViewModels: list[PostViewModel] = []
         for post in posts:
             tags = self.tagPostRepository.GetTagNamesByPostId(post.id)
