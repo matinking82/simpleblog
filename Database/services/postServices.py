@@ -237,5 +237,32 @@ class PostServices:
             "posts": postViewModels,
         }
 
+    async def GetPost(self, id: int):
+        post = self.postRepository.GetById(id)
+
+        if not post:
+            return {"success": False, "message": "post not found"}
+
+        tags = self.tagPostRepository.GetTagNamesByPostId(post.id)
+
+        return {
+            "success": True,
+            "message": "post found",
+            "post": PostViewModel(
+                id=post.id,
+                title=post.title,
+                content=post.content,
+                authorId=post.authorId,
+                author=(
+                    None
+                    if not post.authorId
+                    else self.userRepository.GetById(post.authorId).username
+                ),
+                created_at=post.created_at,
+                updated_at=post.updated_at,
+                tags=tags,
+            ),
+        }
+
 
 PostServiceDep = Annotated[PostServices, Depends(PostServices)]
