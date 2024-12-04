@@ -30,7 +30,7 @@ class TagRepository:
     def GetByName(self, name) -> Tag:
         return self.session.exec(select(Tag).where(Tag.name == name)).first()
 
-    def GetAll(self, page=1, pageSize=100, filter=None) -> list[Tag]:
+    def GetAll(self, page=1, pageSize=100, filter=True) -> list[Tag]:
         return self.session.exec(
             select(Tag).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()

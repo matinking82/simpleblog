@@ -31,7 +31,7 @@ class UserRepository:
     def GetByUsername(self, username) -> User:
         return self.session.exec(select(User).where(User.username == username)).first()
 
-    def GetAll(self, page=1, pageSize=100, filter=None) -> list[User]:
+    def GetAll(self, page=1, pageSize=100, filter=True) -> list[User]:
         return self.session.exec(
             select(User).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()

@@ -30,7 +30,7 @@ class CommentRepository:
             select(Comment).where(Comment.id == comment_id)
         ).first()
 
-    def GetAll(self, page=1, pageSize=100, filter=None) -> list[Comment]:
+    def GetAll(self, page=1, pageSize=100, filter=True) -> list[Comment]:
         return self.session.exec(
             select(Comment).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()

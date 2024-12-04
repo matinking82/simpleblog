@@ -30,7 +30,7 @@ class AdminRepository:
             select(Admin).where(Admin.username == username)
         ).first()
 
-    def GetAll(self, page=1, pageSize=100, filter=None) -> list[Admin]:
+    def GetAll(self, page=1, pageSize=100, filter=True) -> list[Admin]:
         return self.session.exec(
             select(Admin).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()

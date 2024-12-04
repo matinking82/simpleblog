@@ -56,7 +56,7 @@ class TagPostRepository:
             logger.error(e)
             return False
 
-    def GetAll(self, page=1, pageSize=100, filter=None) -> list[TagPost]:
+    def GetAll(self, page=1, pageSize=100, filter=True) -> list[TagPost]:
         return self.session.exec(
             select(TagPost).limit(pageSize).offset((page - 1) * pageSize).filter(filter)
         ).all()
