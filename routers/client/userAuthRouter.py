@@ -68,3 +68,20 @@ async def changeRole(
         )
 
     return result
+
+
+@router.get("/all-users")
+async def getAllUsers(
+    userServices: UserServiceDep,
+    authUser: dict = protected_route([UserRoles.ADMIN]),
+    page: int = 1,
+    pageSize: int = 10,
+):
+    result = await userServices.GetAllUsers(page, pageSize)
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=result["message"]
+        )
+
+    return result

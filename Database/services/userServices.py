@@ -127,5 +127,22 @@ class UserServices:
             "success": False,
         }
 
+    async def GetAllUsers(self, page: int, pageSize: int):
+        users = self.userRepository.GetAll(page, pageSize)
+
+        return {
+            "message": "Users found",
+            "success": True,
+            "users": [
+                UserViewModel(
+                    id=user.id,
+                    username=user.username,
+                    isAuthor=user.isAuthor,
+                    created_at=user.created_at,
+                )
+                for user in users
+            ],
+        }
+
 
 UserServiceDep = Annotated[UserServices, Depends(UserServices)]
